@@ -4,8 +4,9 @@
 // -------------------------------------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Health.Fhir.Synapse.Core.Jobs;
 
@@ -20,45 +21,31 @@ namespace Microsoft.Health.Fhir.Synapse.FunctionApp
             _jobManager = jobManager;
         }
 
-        [Function("JobManagerFunction")]
+        [FunctionName("JobManagerFunction")]
         public async Task Run(
-            [TimerTrigger("0 */5 * * * *", RunOnStartup = false)] MyInfo myTimer,
-            FunctionContext context)
+            [TimerTrigger("0 */1 * * * *", RunOnStartup = false)] TimerInfo myTimer,
+            ILogger log,
+            CancellationToken stoppingToken)
         {
-            var logger = context.GetLogger("JobManagerFunction");
-            logger.LogInformation("C# Timer trigger function executed at: {time}", DateTime.Now);
-            logger.LogInformation("Next timer schedule at: {time}", myTimer.ScheduleStatus.Next);
+            log.LogInformation($"Timer trigger function executed at: {DateTime.Now}");
 
             try
             {
-                await _jobManager.RunAsync();
+                await _jobManager.RunAsync(stoppingToken);
+            }
+            catch (OperationCanceledException canceledException)
+            {
+                log.LogError(canceledException, "Function execution has been canceled or timed out.");
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Function execution failed.");
+                log.LogError(exception, "Function execution failed.");
+            }
+            finally
+            {
                 _jobManager.Dispose();
-                throw;
+                log.LogInformation("Function exit gracefully.");
             }
         }
-    }
-
-#pragma warning disable SA1402 // File may only contain a single type
-    public class MyInfo
-#pragma warning restore SA1402 // File may only contain a single type
-    {
-        public MyScheduleStatus ScheduleStatus { get; set; }
-
-        public bool IsPastDue { get; set; }
-    }
-
-#pragma warning disable SA1402 // File may only contain a single type
-    public class MyScheduleStatus
-#pragma warning restore SA1402 // File may only contain a single type
-    {
-        public DateTime Last { get; set; }
-
-        public DateTime Next { get; set; }
-
-        public DateTime LastUpdated { get; set; }
     }
 }
