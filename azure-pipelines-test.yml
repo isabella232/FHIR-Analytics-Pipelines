@@ -35,5 +35,7 @@ stages:
     - template: FhirToCdm/publish.yml
 
   - job: PublishArtifactsToGitHub
+    dependsOn: PublishFhirToCdm
+    condition: succeeded()
     steps:
     - template: publish.yml
