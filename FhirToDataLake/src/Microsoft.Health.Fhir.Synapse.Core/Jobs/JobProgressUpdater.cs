@@ -4,6 +4,7 @@
 // -------------------------------------------------------------------------------------------------
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -61,6 +62,11 @@ namespace Microsoft.Health.Fhir.Synapse.Core.Jobs
                     if (context.IsCompleted)
                     {
                         _job.CompletedResources.Add(context.ResourceType);
+                        _logger.LogWarning(
+                            "Progress: {resource} finished. processed {count} at {time}",
+                            context.ResourceType,
+                            _job.ProcessedResourceCounts.Sum(x => x.Value),
+                            DateTime.Now);
                     }
 
                     if (uploadTime.AddSeconds(UploadDataIntervalInSeconds) < DateTimeOffset.UtcNow)

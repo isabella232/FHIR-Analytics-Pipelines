@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -58,6 +59,11 @@ namespace Microsoft.Health.Fhir.Synapse.Core.Tasks
             JobProgressUpdater progressUpdater,
             CancellationToken cancellationToken = default)
         {
+            double apiCost = 0;
+            double jsonCost = 0;
+            double parquetCost = 0;
+            double blobCost = 0;
+
             int pageCount = 0;
             while (!taskContext.IsCompleted)
             {
@@ -66,8 +72,11 @@ namespace Microsoft.Health.Fhir.Synapse.Core.Tasks
                     throw new OperationCanceledException();
                 }
 
+                var stopWatch = Stopwatch.StartNew();
                 var searchParameters = new FhirSearchParameters(taskContext.ResourceType, taskContext.StartTime, taskContext.EndTime, taskContext.ContinuationToken);
                 var fhirBundleResult = await _dataClient.SearchAsync(searchParameters, cancellationToken);
+                apiCost += stopWatch.Elapsed.TotalSeconds;
+                stopWatch.Restart();
 
                 // Parse bundle result.
                 JObject fhirBundleObject = null;
@@ -96,14 +105,24 @@ namespace Microsoft.Health.Fhir.Synapse.Core.Tasks
                     // Convert grouped data to parquet stream
                     var originalSkippedCount = taskContext.SkippedCount;
                     var inputData = new JsonBatchData(dayGroup.ToImmutableList());
+
+                    jsonCost += stopWatch.Elapsed.TotalSeconds;
+                    stopWatch.Restart();
+
                     var parquetStream = await _parquetDataProcessor.ProcessAsync(inputData, taskContext, cancellationToken);
                     var skippedCount = taskContext.SkippedCount - originalSkippedCount;
+
+                    parquetCost += stopWatch.Elapsed.TotalSeconds;
+                    stopWatch.Restart();
 
                     if (parquetStream?.Value?.Length > 0)
                     {
                         // Upload to blob and log result
                         var blobUrl = await _dataWriter.WriteAsync(parquetStream, taskContext, dayGroup.Key.Value, cancellationToken);
                         taskContext.PartId += 1;
+
+                        blobCost += stopWatch.Elapsed.TotalSeconds;
+                        stopWatch.Restart();
 
                         var batchResult = new BatchDataResult(
                             taskContext.ResourceType,
@@ -142,6 +161,7 @@ namespace Microsoft.Health.Fhir.Synapse.Core.Tasks
             _logger.LogInformation(
                 "Finished processing resource '{resourceType}'.",
                 taskContext.ResourceType);
+            _logger.LogWarning($"Processed {taskContext.ResourceType} at {pageCount} pages, {apiCost} {jsonCost} {parquetCost} {blobCost}");
 
             return TaskResult.CreateFromTaskContext(taskContext);
         }
