@@ -4,14 +4,10 @@
 // -------------------------------------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Health.Fhir.Synapse.DataClient.Api;
 using Microsoft.Health.Fhir.Synapse.SchemaManagement.ContainerRegistry;
 using Microsoft.Health.Fhir.Synapse.SchemaManagement.Exceptions;
 using Microsoft.Health.Fhir.TemplateManagement.Models;
@@ -38,6 +34,8 @@ namespace Microsoft.Health.Fhir.Synapse.SchemaManagement.UnitTests.ContainerRegi
 
             var testContainerRegistryUsername = Environment.GetEnvironmentVariable("TestContainerRegistryServer")?.Split('.')[0];
             var testContainerRegistryPassword = Environment.GetEnvironmentVariable("TestContainerRegistryPassword");
+            Console.WriteLine($"Password length: {testContainerRegistryPassword}");
+
             _testContainerRegistryAccessToken = GetContainerRegistryAccessToken(testContainerRegistryUsername, testContainerRegistryPassword);
         }
 
