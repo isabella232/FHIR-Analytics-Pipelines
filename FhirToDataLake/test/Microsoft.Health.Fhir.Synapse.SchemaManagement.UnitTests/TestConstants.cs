@@ -10,5 +10,7 @@ namespace Microsoft.Health.Fhir.Synapse.SchemaManagement.UnitTests
         public const string CustomizedTestSchemaDirectory = "../../../TestData/CustomizedSchema";
 
         public const string DefaultSchemaDirectory = "../../../../../data/schemas";
+
+        public const string TestTemplateTarGzPath = "../../../TestData/TemplateTest.tar.gz";
     }
 }
