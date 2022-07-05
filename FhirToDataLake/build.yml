@@ -66,8 +66,6 @@ steps:
     codeCoverageEnabled: true
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
-  env:
-    TestContainerRegistryPassword: $(TestContainerRegistryPasswordSecret)
 
 - task: VSTest@2
   displayName: 'Run managed tests'
@@ -81,6 +79,8 @@ steps:
     codeCoverageEnabled: true
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+  env:
+    TestContainerRegistryPassword: $(TestContainerRegistryPasswordSecret)
 
 - task: PowerShell@2
   displayName: Logout Azure Account

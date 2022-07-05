@@ -22,10 +22,6 @@ stages:
   pool:
     vmImage: windows-2019
   jobs:
-  - job: BuildFhirToCdm
-    steps:
-    - template: FhirToCdm/build.yml
-
   - job: BuildFhirToDataLake
     steps:
     - template: FhirToDataLake/build.yml
