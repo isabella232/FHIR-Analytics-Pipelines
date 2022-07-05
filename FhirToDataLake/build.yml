@@ -55,6 +55,11 @@ steps:
     script: |
       az login -u $(pipeline-service-principal-name) -p $(pipeline-service-principal-password) --service-principal --tenant $(pipeline-tenant-id)
 
+- powershell: |
+    Write-Host "Using the test container registry server: $(TestContainerRegistryServer)"
+  env:
+    ContainerRegistryPassword: $(TestContainerRegistryPassword)
+
 - task: VSTest@2
   displayName: 'Run native tests'
   inputs:
