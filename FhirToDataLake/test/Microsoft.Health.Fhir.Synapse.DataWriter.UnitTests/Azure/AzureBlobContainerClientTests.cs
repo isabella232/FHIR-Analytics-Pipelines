@@ -718,7 +718,9 @@ namespace Microsoft.Health.Fhir.Synapse.DataWriter.UnitTests.Azure
         private string GetAdlsGen2StoreUrl()
         {
             // return Environment.GetEnvironmentVariable("dataLakeStore:storageUrl");
-            return "https://fhiranalyticspipeline.blob.core.windows.net";
+            string storageUrl = "https://fhiranalyticspipeline.blob.core.windows.net";
+            Console.WriteLine($"Use the storage account url: {storageUrl}");
+            return storageUrl;
         }
     }
 }
