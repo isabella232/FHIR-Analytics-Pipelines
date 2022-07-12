@@ -1,0 +1,48 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+- main
+- synapse
+- refs/heads/synapse
+pr:
+- main
+- synapse
+
+variables:
+  buildConfiguration: 'Release'
+  buildPlatform: 'x64'
+  major: 0
+  minor: 3
+  patch: 0
+  buildnum: $[counter(format('{0}.{1}.{2}', variables['major'], variables['minor'], variables['patch']), 1)]
+  version: $(major).$(minor).$(patch).$(buildnum)
+
+stages:
+- stage: Build
+  pool:
+    vmImage: windows-2019
+  jobs:
+  - job: BuildFhirToDataLake
+    steps:
+    - template: FhirToDataLake/build.yml
+
+- stage: Release
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  pool:
+    vmImage: 'windows-latest'
+  jobs:
+  - job: SynapseE2ETest
+    steps:
+    - template: FhirToDataLake/synapse-e2e-test.yml
+
+  - job: PublishFhirToCdm
+    dependsOn: SynapseE2ETest
+    condition: succeeded()
+    steps:
+    - template: FhirToCdm/publish.yml
+
+  - job: PublishArtifactsToGitHub
+    dependsOn: PublishFhirToCdm
+    condition: succeeded()
+    steps:
+    - template: publish.yml
