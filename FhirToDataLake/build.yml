@@ -59,6 +59,7 @@ steps:
 - task: VSTest@2
   displayName: 'Run managed tests'
   inputs:
+    azureSubscription: 'ResoluteOpenSource'
     testAssemblyVer2: |
       FhirToDataLake\**\*Tests.dll
       !**\*Native*\**\*UnitTests.dll
@@ -71,14 +72,6 @@ steps:
   env:
     TestContainerRegistryServer: $(pipeline-container-registry-server)
     TestContainerRegistryPassword: $(pipeline-container-registry-password)
-
-- task: PowerShell@2
-  displayName: Logout Azure Account
-  inputs:
-    targetType: 'inline'
-    script: |
-      az logout
-      Write-Host "Cleared Azure Account successfully."
 
 - task: Docker@2
   displayName: Stop mock-data-source
