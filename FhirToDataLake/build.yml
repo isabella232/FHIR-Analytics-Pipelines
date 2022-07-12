@@ -36,11 +36,6 @@ steps:
     "%ProgramFiles(x86)%\Microsoft SDKs\Azure\Storage Emulator\AzureStorageEmulator.exe" start
   displayName: 'Start Azure Storage Emulator'
 
-- script: |
-    docker pull healthplatformregistry.azurecr.io/fhir-analytics-data-source:v0.0.1
-    docker run --rm -d -p 5000:5000 --name mock-data-source healthplatformregistry.azurecr.io/fhir-analytics-data-source:v0.0.1
-  displayName: Start mock-data-source
-
 - task: AzureKeyVault@2
   inputs:
     azureSubscription: 'ResoluteOpenSource'
@@ -48,16 +43,10 @@ steps:
     SecretsFilter: '*'
     RunAsPreJob: false
 
-- task: PowerShell@2
-  displayName: Login Azure Account
-  inputs:
-    targetType: 'inline'
-    script: |
-      az login -u $(pipeline-service-principal-name) -p $(pipeline-service-principal-password) --service-principal --tenant $(pipeline-tenant-id)
-
 - task: VSTest@2
   displayName: 'Run native tests'
   inputs:
+    azureSubscription: 'ResoluteOpenSource'
     testAssemblyVer2: |
       **\*Native*\**\*UnitTests.dll
       !**\obj\**
